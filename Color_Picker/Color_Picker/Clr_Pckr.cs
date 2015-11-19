@@ -60,7 +60,7 @@ namespace Color_Picker
             innerCanvas = GetTemplateChild("innerCanvas") as Canvas;
             innerEll = GetTemplateChild("innerEll") as Grid;
             ColorImg = GetTemplateChild("ColorImg") as Image;
-           
+
             thumbInnerEll = GetTemplateChild("thumbInnerEll") as Thumb;
             rectColor = GetTemplateChild("rectColor") as Rectangle;
             gdStop = GetTemplateChild("gdStop") as GradientStop;
@@ -69,18 +69,22 @@ namespace Color_Picker
 
 
             ColorImg.Tapped += ColorImg_Tapped_1;
-          
+
             rectColor.PointerPressed += Rectangle_PointerPressed_1;
             thumbInnerEll.DragDelta += Thumb_DragDelta_1;
 
             ColorImg.PointerReleased += ColorImg_PointerReleased_1;
             ColorImg.PointerPressed += ColorImg_PointerPressed_1;
             ColorImg.PointerMoved += ColorImg_PointerMoved_1;
+            InitSelectedColor(SelectedColor);
+        }
 
-            gdStop.Color = SelectedColor;
-            FinalColor.Fill = new SolidColorBrush(SelectedColor);
-
-
+        private void InitSelectedColor(Color TheFillColor)
+        {
+            if (gdStop == null)
+                return;
+            gdStop.Color = TheFillColor;
+            FinalColor.Fill = new SolidColorBrush(TheFillColor);
 
             GeneralTransform gt = pointer.TransformToVisual(reference);
 
@@ -101,14 +105,10 @@ namespace Color_Picker
 
         private void ColorImg_PointerMoved_1(object sender, PointerRoutedEventArgs e)
         {
-
             if (ispressed)
             {
-
                 px = e.GetCurrentPoint(reference).Position.X;
                 py = e.GetCurrentPoint(reference).Position.Y;
-
-
 
                 rtrnsfrm.Rotation = Math.Atan2(py, px) * (180 / Math.PI) + 135;
                
@@ -126,15 +126,11 @@ namespace Color_Picker
         private void ColorImg_PointerReleased_1(object sender, PointerRoutedEventArgs e)
         {
             ispressed = false;
-
         }
 
         public Clr_Pckr()
         {
             this.DefaultStyleKey = typeof(Clr_Pckr);
-
-
-            
         }
 
         private async void loadnew()
@@ -210,12 +206,14 @@ namespace Color_Picker
             innerEll.SetValue(Canvas.LeftProperty, x - 4);
             innerEll.SetValue(Canvas.TopProperty, y - 4);
             FinalColor.Fill = new SolidColorBrush(LinearGdHelperClass.GetColorAtPoint(rectColor, new Point(x + 4, y + 4)));
-
+            SelectedColor = LinearGdHelperClass.GetColorAtPoint(rectColor, new Point(x + 4, y + 4));
         }
         double px, py;
      
         private void fillColor()
         {
+            if (ColorImg == null)
+                return;
             GeneralTransform gt = pointer.TransformToVisual(ColorImg);
             Point p = new Point();
             p = gt.TransformPoint(p);
@@ -233,10 +231,7 @@ namespace Color_Picker
                  gdStop.Color = Color.FromArgb(255, (byte)r, (byte)g, (byte)b);
 
                 FinalColor.Fill = new SolidColorBrush(LinearGdHelperClass.GetColorAtPoint(rectColor, new Point((double)innerEll.GetValue(Canvas.LeftProperty) + 4, (double)innerEll.GetValue(Canvas.TopProperty) + 4)));
-                SelectedColor = LinearGdHelperClass.GetColorAtPoint(rectColor, new Point((double)innerEll.GetValue(Canvas.LeftProperty) + 4, (double)innerEll.GetValue(Canvas.TopProperty) + 4));
-           
-
-               
+                SelectedColor = LinearGdHelperClass.GetColorAtPoint(rectColor, new Point((double)innerEll.GetValue(Canvas.LeftProperty) + 4, (double)innerEll.GetValue(Canvas.TopProperty) + 4));               
             }
             catch { }
         }
@@ -270,11 +265,21 @@ namespace Color_Picker
 
       
         public static readonly DependencyProperty SelectedColorProperty =
-            DependencyProperty.Register("SelectedColor", typeof(Color), typeof(Clr_Pckr), new PropertyMetadata(Colors.Yellow));
+            DependencyProperty.Register("SelectedColor", typeof(Color), typeof(Clr_Pckr), 
+                new PropertyMetadata(null, new PropertyChangedCallback(OnColorProperyChanged)));
 
     
+        private static void OnColorProperyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs args)
+        {
+            var control = (Clr_Pckr)obj;
+            if (args.NewValue == args.OldValue)
+                return;
+            if (control.FinalColor == null)
+                return;
+            control.InitSelectedColor((Color)args.NewValue);
+            control.FinalColor.Fill = new SolidColorBrush( (Color)args.NewValue );
+        }
 
-        
         public event EventHandler colorChanged;
 
         private void OncolorChanged()
