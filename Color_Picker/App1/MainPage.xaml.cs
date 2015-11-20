@@ -39,9 +39,22 @@ namespace App1
 
         private void asd_colorChanged_1(object sender, EventArgs e)
         {
-            
-                testEll.Fill = new SolidColorBrush(asd.SelectedColor);
-          
+
+            testEll.Fill = new SolidColorBrush(asd.SelectedColor);
+
+        }
+
+        private void asd2_colorChanged_1(object sender, EventArgs e)
+        {
+
+            testEll2.Fill = new SolidColorBrush(asd2.SelectedColor);
+
+        }
+
+        private void but_SyncClicked(object sender, RoutedEventArgs e)
+        {
+            asd.SelectedColor = asd2.SelectedColor;
+            testEll.Fill = new SolidColorBrush(asd.SelectedColor);
         }
     }
 }
